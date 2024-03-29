@@ -1,12 +1,17 @@
 package httpHelpers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/exgamer/go-sdk/pkg/exception"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
 	"net/http"
 )
+
+func TextErrorResponse(c *gin.Context, statusCode int, message string, context map[string]any) {
+	AppExceptionResponse(c, exception.NewAppException(statusCode, errors.New(message), context))
+}
 
 func ErrorResponse(c *gin.Context, statusCode int, err error, context map[string]any) {
 	AppExceptionResponse(c, exception.NewAppException(statusCode, err, context))
