@@ -9,12 +9,27 @@ import (
 	"net/http"
 )
 
+func FormattedTextErrorResponse(c *gin.Context, statusCode int, message string, context map[string]any) {
+	TextErrorResponse(c, statusCode, message, context)
+	FormattedResponse(c)
+}
+
 func TextErrorResponse(c *gin.Context, statusCode int, message string, context map[string]any) {
 	AppExceptionResponse(c, exception.NewAppException(statusCode, errors.New(message), context))
 }
 
+func FormattedErrorResponse(c *gin.Context, statusCode int, err error, context map[string]any) {
+	ErrorResponse(c, statusCode, err, context)
+	FormattedResponse(c)
+}
+
 func ErrorResponse(c *gin.Context, statusCode int, err error, context map[string]any) {
 	AppExceptionResponse(c, exception.NewAppException(statusCode, err, context))
+}
+
+func FormattedAppExceptionResponse(c *gin.Context, exception *exception.AppException) {
+	AppExceptionResponse(c, exception)
+	FormattedResponse(c)
 }
 
 func AppExceptionResponse(c *gin.Context, exception *exception.AppException) {
@@ -24,6 +39,11 @@ func AppExceptionResponse(c *gin.Context, exception *exception.AppException) {
 
 func SuccessResponse(c *gin.Context, data any) {
 	c.Set("data", data)
+}
+
+func FormattedSuccessResponse(c *gin.Context, data any) {
+	SuccessResponse(c, data)
+	FormattedResponse(c)
 }
 
 func FormattedResponse(c *gin.Context) {
