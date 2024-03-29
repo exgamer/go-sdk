@@ -24,7 +24,7 @@ func FormattedResponseMiddleware() gin.HandlerFunc {
 
 		if !exists {
 			data, _ := c.Get("data")
-			//logInfo("", c, config)
+
 			c.JSON(http.StatusOK, gin.H{"success": true, "data": data})
 
 			return
