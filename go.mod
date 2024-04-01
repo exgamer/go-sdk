@@ -6,6 +6,7 @@ require (
 	github.com/getsentry/sentry-go v0.24.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-errors/errors v1.4.2
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.3.0
 	github.com/gookit/validate v1.5.2
 	github.com/mitchellh/mapstructure v1.5.0
