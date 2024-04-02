@@ -59,7 +59,7 @@ func FormattedResponse(c *gin.Context) {
 	if !exists {
 		data, _ := c.Get("data")
 
-		c.JSON(http.StatusOK, gin.H{"success": true, "data": data})
+		c.JSON(http.StatusOK, data)
 
 		return
 	}
