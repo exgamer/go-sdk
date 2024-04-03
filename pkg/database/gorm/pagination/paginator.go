@@ -1,4 +1,4 @@
-package gorm
+package pagination
 
 import (
 	"errors"
@@ -6,28 +6,6 @@ import (
 
 	"gorm.io/gorm"
 )
-
-type Pagination struct {
-	TotalRecords int64 `json:"total_records"`
-	TotalPage    int   `json:"total_page"`
-	Offset       int   `json:"offset"`
-	Limit        int   `json:"limit"`
-	Page         int   `json:"page"`
-	PrevPage     int   `json:"prev_page"`
-	NextPage     int   `json:"next_page"`
-}
-
-type Paging struct {
-	Page    int      `json:"page"`
-	OrderBy []string `json:"order_by"`
-	Limit   int      `json:"limit"`
-	ShowSQL bool
-}
-
-type Param struct {
-	DB     *gorm.DB
-	Paging *Paging
-}
 
 // Endpoint for pagination
 func Pages(p *Param, result interface{}) (paginator *Pagination, err error) {
