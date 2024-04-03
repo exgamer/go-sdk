@@ -1,9 +1,9 @@
-package httpRequestBuilder
+package builder
 
 import (
 	"encoding/json"
 	"github.com/exgamer/go-sdk/pkg/config"
-	"github.com/exgamer/go-sdk/pkg/http/httpHelperStruct"
+	"github.com/exgamer/go-sdk/pkg/http/structures"
 	"github.com/exgamer/go-sdk/pkg/logger"
 	"github.com/motemen/go-loghttp"
 	"io"
@@ -43,7 +43,7 @@ type HttpRequestBuilder[E interface{}] struct {
 	appInfo             *config.AppInfo
 	timeout             time.Duration
 	transport           loghttp.Transport
-	response            *httpHelperStruct.HttpResponse
+	response            *structures.HttpResponse
 	result              E
 }
 
@@ -95,7 +95,7 @@ func (builder *HttpRequestBuilder[E]) do() error {
 	}
 
 	response, err := client.Do(req)
-	builder.response = &httpHelperStruct.HttpResponse{
+	builder.response = &structures.HttpResponse{
 		Url:     builder.url,
 		Method:  builder.method,
 		Headers: builder.headers,

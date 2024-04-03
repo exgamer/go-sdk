@@ -1,4 +1,4 @@
-package ginHelpers
+package gin
 
 import (
 	"github.com/exgamer/go-sdk/pkg/config"

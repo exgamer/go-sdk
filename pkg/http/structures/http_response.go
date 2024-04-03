@@ -1,4 +1,4 @@
-package httpHelperStruct
+package structures
 
 // HttpResponse Модель описывающая ответ от rest запроса
 type HttpResponse struct {

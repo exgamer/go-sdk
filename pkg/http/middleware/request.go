@@ -1,4 +1,4 @@
-package httpMiddleware
+package middleware
 
 import (
 	"github.com/exgamer/go-sdk/pkg/config"
