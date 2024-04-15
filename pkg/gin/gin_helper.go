@@ -1,12 +1,14 @@
 package gin
 
 import (
+	"github.com/JGLTechnologies/gin-rate-limit"
 	"github.com/exgamer/go-sdk/pkg/config"
 	"github.com/exgamer/go-sdk/pkg/exception"
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/go-errors/errors"
+	"github.com/redis/go-redis/v9"
 	timeout "github.com/vearne/gin-timeout"
 	ginprometheus "github.com/zsais/go-gin-prometheus"
 	"net/http"
@@ -37,10 +39,28 @@ func InitRouter(baseConfig *config.BaseConfig) *gin.Engine {
 	return router
 }
 
+func getGinRedisRateLimiter(redis *redis.Client, limit uint) gin.HandlerFunc {
+	// This makes it so each ip can only make n requests per second
+	store := ratelimit.RedisStore(&ratelimit.RedisOptions{
+		RedisClient: redis,
+		Rate:        time.Second,
+		Limit:       limit,
+	})
+
+	return ratelimit.RateLimiter(store, &ratelimit.Options{
+		ErrorHandler: func(context *gin.Context, info ratelimit.Info) {
+			context.String(http.StatusTooManyRequests, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
+		},
+		KeyFunc: func(context *gin.Context) string {
+			return context.ClientIP()
+		},
+	})
+}
+
 // ErrorHandler Обработчик ошибок gin
 func ErrorHandler(c *gin.Context, err any) {
 	goErr := errors.Wrap(err, 2)
-	details := make([]string, len(goErr.StackFrames()))
+	details := make([]string, 0)
 
 	for _, frame := range goErr.StackFrames() {
 		details = append(details, frame.String())

@@ -1,4 +1,4 @@
-package database
+package redigo
 
 import (
 	"github.com/exgamer/go-sdk/pkg/config"
