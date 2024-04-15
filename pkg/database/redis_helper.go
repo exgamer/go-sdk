@@ -34,7 +34,7 @@ func (redisHelper *RedisHelper[E]) GetByModel(key string) (*E, error) {
 		return nil, nil
 	}
 
-	unMarshErr := json.Unmarshal([]byte(val), redisHelper.result)
+	unMarshErr := json.Unmarshal([]byte(val), &redisHelper.result)
 
 	if unMarshErr != nil {
 		return nil, unMarshErr
