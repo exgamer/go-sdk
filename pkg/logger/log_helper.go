@@ -62,10 +62,10 @@ func FormattedLog(level string, serviceName string, method string, uri string, s
 
 // FormattedLogWithAppInfo Форматированный лог для RequestData
 func FormattedLogWithAppInfo(appInfo *config.AppInfo, message string) {
-	FormattedInfo(appInfo.ServiceName, appInfo.RequestMethod, appInfo.RequestHost+appInfo.RequestUrl, 0, appInfo.RequestId, message)
+	FormattedInfo(appInfo.ServiceName, appInfo.RequestMethod, appInfo.RequestUrl, 0, appInfo.RequestId, message)
 }
 
 // FormattedErrorWithAppInfo Форматированный лог ошибки для RequestData
 func FormattedErrorWithAppInfo(appInfo *config.AppInfo, message string) {
-	FormattedInfo(appInfo.ServiceName, appInfo.RequestMethod, appInfo.RequestHost+appInfo.RequestUrl, 1, appInfo.RequestId, message)
+	FormattedInfo(appInfo.ServiceName, appInfo.RequestMethod, appInfo.RequestUrl, 1, appInfo.RequestId, message)
 }
