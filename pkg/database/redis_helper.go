@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/exgamer/go-sdk/pkg/config"
+	"github.com/exgamer/go-sdk/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -18,7 +20,15 @@ func NewRedisHelper[E interface{}](redisClient *redis.Client) *RedisHelper[E] {
 // RedisHelper - Хелпер для работы с редисом
 type RedisHelper[E interface{}] struct {
 	redisClient *redis.Client
+	appInfo     *config.AppInfo
 	result      E
+}
+
+// SetRequestData - установить Доп данные для запроса (используется для логирования)
+func (redisHelper *RedisHelper[E]) SetRequestData(appInfo *config.AppInfo) *RedisHelper[E] {
+	redisHelper.appInfo = appInfo
+
+	return redisHelper
 }
 
 // GetByModel Возвращает значение по ключу
@@ -40,6 +50,8 @@ func (redisHelper *RedisHelper[E]) GetByModel(key string) (*E, error) {
 		return nil, unMarshErr
 	}
 
+	logger.FormattedLogWithAppInfo(redisHelper.appInfo, "GOT DATA FROM CACHE: "+val)
+
 	return &redisHelper.result, nil
 }
 
@@ -58,6 +70,8 @@ func (redisHelper *RedisHelper[E]) SetByModel(key string, model *E, ttl time.Dur
 	if err != nil {
 		return err
 	}
+
+	logger.FormattedLogWithAppInfo(redisHelper.appInfo, "SET DATA TO CACHE: "+string(jsonModel))
 
 	return nil
 }
