@@ -43,7 +43,7 @@ type HttpRequestBuilder[E interface{}] struct {
 	appInfo             *config.AppInfo
 	timeout             time.Duration
 	transport           loghttp.Transport
-	response            *structures.HttpResponse
+	response            *structures.HttpResponse[E]
 	result              E
 }
 
@@ -95,7 +95,7 @@ func (builder *HttpRequestBuilder[E]) do() error {
 	}
 
 	response, err := client.Do(req)
-	builder.response = &structures.HttpResponse{
+	builder.response = &structures.HttpResponse[E]{
 		Url:     builder.url,
 		Method:  builder.method,
 		Headers: builder.headers,
@@ -152,7 +152,7 @@ func (builder *HttpRequestBuilder[E]) Do() error {
 	messageBuilder.WriteString("Url: " + builder.response.Method + " " + builder.response.Status + " " + builder.response.Url)
 	messageBuilder.WriteString(" Exec time:" + execTime.String())
 
-	if builder.response.StatusCode != 200 {
+	if builder.response.StatusCode >= 400 {
 		messageBuilder.WriteString(" Response:" + string(builder.response.Body))
 	}
 
@@ -162,7 +162,7 @@ func (builder *HttpRequestBuilder[E]) Do() error {
 }
 
 // GetResult  Возвращает результат
-func (builder *HttpRequestBuilder[E]) GetResult() (*E, error) {
+func (builder *HttpRequestBuilder[E]) GetResult() (*structures.HttpResponse[E], error) {
 	err := builder.Do()
 
 	if err != nil {
@@ -175,5 +175,7 @@ func (builder *HttpRequestBuilder[E]) GetResult() (*E, error) {
 		return nil, unMarshErr
 	}
 
-	return &builder.result, nil
+	builder.response.Result = builder.result
+
+	return builder.response, nil
 }
