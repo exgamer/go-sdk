@@ -5,6 +5,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/exgamer/go-sdk/pkg/config"
+	"github.com/exgamer/go-sdk/pkg/logger"
 	"github.com/exgamer/go-sdk/pkg/sentry"
 	"log"
 	"os"
@@ -93,9 +94,12 @@ func (kc *KafkaConsumer) initConsume() {
 				}
 
 				configValue, _ := kc.configMap.Get("group.id", "-")
+				groupId := configValue.(string)
 
 				switch e := ev.(type) {
 				case *kafka.Message:
+					message := "key:" + string(e.Key) + "; value:" + string(e.Value)
+					logger.FormattedInfo(kc.appInfo.ServiceName, "", *e.TopicPartition.Topic, 0, groupId, message)
 					err := kc.writer.Handle(kc.consumer, e)
 
 					if err != nil {
@@ -104,7 +108,7 @@ func (kc *KafkaConsumer) initConsume() {
 							map[string]string{
 								"service_name": kc.appInfo.ServiceName,
 								"env":          kc.appInfo.AppEnv,
-								"kafka_group":  configValue.(string),
+								"kafka_group":  groupId,
 							},
 							map[string]interface{}{
 								"key":             string(e.Key),
