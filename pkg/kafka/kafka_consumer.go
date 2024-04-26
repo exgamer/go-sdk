@@ -12,7 +12,7 @@ import (
 	"syscall"
 )
 
-func NewConsumer(appInfo *config.AppInfo, topicList []string, configMap *kafka.ConfigMap, writer MessageWriter) *KafkaConsumer {
+func NewConsumer(appInfo *config.AppInfo, topicList []string, configMap *kafka.ConfigMap, writer *DefaultKafkaHandler) *KafkaConsumer {
 	topics := make([]string, len(topicList))
 
 	for i, topic := range topicList {
@@ -33,7 +33,7 @@ type KafkaConsumer struct {
 	consumer  *kafka.Consumer
 	appInfo   *config.AppInfo
 	topicList []string
-	writer    MessageWriter
+	writer    *DefaultKafkaHandler
 	run       bool
 	consume   bool
 	configMap *kafka.ConfigMap
@@ -66,7 +66,7 @@ func (kc *KafkaConsumer) Init() error {
 	kc.consumer.SubscribeTopics(kc.topicList, nil)
 
 	if kc.writer == nil {
-		kc.writer = &DefaultMessageWriter{}
+		kc.writer = &DefaultKafkaHandler{}
 	}
 
 	go kc.initConsume()
@@ -96,7 +96,7 @@ func (kc *KafkaConsumer) initConsume() {
 
 				switch e := ev.(type) {
 				case *kafka.Message:
-					err := kc.writer.WriteMessage(kc.consumer, e)
+					err := kc.writer.Handle(kc.consumer, e)
 
 					if err != nil {
 						log.Println(err)
@@ -159,21 +159,4 @@ func (kc *KafkaConsumer) Close() {
 	kc.run = false
 	kc.consume = false
 	kc.consumer.Close()
-}
-
-func (kc *KafkaConsumer) Consumer() *kafka.Consumer {
-	return kc.consumer
-}
-
-type MessageWriter interface {
-	WriteMessage(consumer *kafka.Consumer, message *kafka.Message) error
-}
-
-type DefaultMessageWriter struct{}
-
-func (d DefaultMessageWriter) WriteMessage(consumer *kafka.Consumer, message *kafka.Message) error {
-	fmt.Printf("Topic: %s, Message: %+v\n", *message.TopicPartition.Topic, string(message.Value))
-	consumer.CommitMessage(message)
-
-	return nil
 }
