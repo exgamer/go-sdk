@@ -11,6 +11,7 @@ type AppInfo struct {
 	RequestMethod string
 	RequestUrl    string
 	ServiceName   string
+	AppEnv        string
 }
 
 func (s *AppInfo) GenerateRequestId() {
