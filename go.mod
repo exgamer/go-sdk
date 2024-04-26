@@ -4,6 +4,8 @@ go 1.21
 
 require (
 	github.com/JGLTechnologies/gin-rate-limit v1.5.4
+	github.com/confluentinc/confluent-kafka-go/v2 v2.3.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/getsentry/sentry-go v0.24.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-errors/errors v1.4.2
