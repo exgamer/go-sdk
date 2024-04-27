@@ -13,17 +13,12 @@ import (
 	"syscall"
 )
 
-func NewConsumer(appInfo *config.AppInfo, topicList []string, configMap *kafka.ConfigMap, writer *DefaultKafkaHandler) *KafkaConsumer {
-	topics := make([]string, len(topicList))
-
-	for i, topic := range topicList {
-		topics[i] = appInfo.AppEnv + "." + topic
-	}
-
+func NewConsumer(appInfo *config.AppInfo, handlers map[string]IKafkaHandler, configMap *kafka.ConfigMap) *KafkaConsumer {
 	return &KafkaConsumer{
-		appInfo:   appInfo,
-		topicList: topics,
-		writer:    writer,
+		appInfo: appInfo,
+		//topicList: topics,
+		handlers: handlers,
+		//writer:    writer,
 		run:       true,
 		consume:   false,
 		configMap: configMap,
@@ -31,10 +26,10 @@ func NewConsumer(appInfo *config.AppInfo, topicList []string, configMap *kafka.C
 }
 
 type KafkaConsumer struct {
-	consumer  *kafka.Consumer
-	appInfo   *config.AppInfo
-	topicList []string
-	writer    *DefaultKafkaHandler
+	consumer *kafka.Consumer
+	appInfo  *config.AppInfo
+	//topicList []string
+	handlers  map[string]IKafkaHandler
 	run       bool
 	consume   bool
 	configMap *kafka.ConfigMap
@@ -64,12 +59,21 @@ func (kc *KafkaConsumer) Init() error {
 
 	kc.consumer = c
 
-	kc.consumer.SubscribeTopics(kc.topicList, nil)
+	h := map[string]IKafkaHandler{}
+	var topicList []string
 
-	if kc.writer == nil {
-		kc.writer = &DefaultKafkaHandler{}
+	for topic, handler := range kc.handlers {
+		topicList = append(topicList, kc.appInfo.AppEnv+"."+topic)
+		h[kc.appInfo.AppEnv+"."+topic] = handler
 	}
 
+	if kc.handlers == nil {
+		kc.handlers = map[string]IKafkaHandler{
+			"default": DefaultKafkaHandler{},
+		}
+	}
+
+	kc.consumer.SubscribeTopics(topicList, nil)
 	go kc.initConsume()
 
 	return nil
@@ -98,9 +102,16 @@ func (kc *KafkaConsumer) initConsume() {
 
 				switch e := ev.(type) {
 				case *kafka.Message:
+					topic := e.TopicPartition.Topic
+					handler := kc.handlers[*topic].(IKafkaHandler)
+
+					if handler == nil {
+						handler = kc.handlers["default"].(IKafkaHandler)
+					}
+
 					message := "key:" + string(e.Key) + "; value:" + string(e.Value)
 					logger.FormattedInfo(kc.appInfo.ServiceName, "", *e.TopicPartition.Topic, 0, groupId, message)
-					err := kc.writer.Handle(kc.consumer, e)
+					err := handler.Handle(kc.consumer, e)
 
 					if err != nil {
 						log.Println(err)
