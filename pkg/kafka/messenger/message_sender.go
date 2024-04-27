@@ -2,11 +2,13 @@ package messenger
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/exgamer/go-sdk/pkg/config"
 	"github.com/exgamer/go-sdk/pkg/kafka/messenger/structures"
 	"github.com/exgamer/go-sdk/pkg/logger"
+	"github.com/exgamer/go-sdk/pkg/validation"
 )
 
 func NewMessageSender(appInfo *config.AppInfo, configMap *kafka.ConfigMap) *MessageSender {
@@ -30,12 +32,19 @@ type MessageSender struct {
 	configMap *kafka.ConfigMap
 }
 
-func (s *MessageSender) SendSms(phone string, text string) {
+func (s *MessageSender) SendSms(phone string, text string) error {
 	producer, _ := kafka.NewProducer(s.configMap)
 
 	smsMessage := structures.SmsMessage{
 		Phone: phone,
 		Text:  text,
+	}
+
+	if !validation.CheckValidPhone(smsMessage.Phone) {
+		message := "Sms message send error: invalid phone number:" + phone
+		logger.FormattedError(s.appInfo.ServiceName, s.appInfo.RequestMethod, s.appInfo.RequestUrl, 0, s.appInfo.RequestId, message)
+
+		return errors.New("invalid phone number")
 	}
 
 	topic := s.appInfo.AppEnv + "." + "messenger-service.command.sms" // хард код потому что по идее никогда не изменится
@@ -46,4 +55,6 @@ func (s *MessageSender) SendSms(phone string, text string) {
 	}, nil)
 	message := "Sms message send: phone:" + phone + "; text:" + text
 	logger.FormattedInfo(s.appInfo.ServiceName, s.appInfo.RequestMethod, s.appInfo.RequestUrl, 0, s.appInfo.RequestId, message)
+
+	return nil
 }
