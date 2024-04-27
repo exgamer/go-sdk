@@ -73,6 +73,8 @@ func (kc *KafkaConsumer) Init() error {
 		}
 	}
 
+	spew.Dump(kc.handlers)
+	spew.Dump(topicList)
 	kc.consumer.SubscribeTopics(topicList, nil)
 	go kc.initConsume()
 
