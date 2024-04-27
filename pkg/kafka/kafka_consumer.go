@@ -67,6 +67,8 @@ func (kc *KafkaConsumer) Init() error {
 		h[kc.appInfo.AppEnv+"."+topic] = handler
 	}
 
+	kc.handlers = h
+
 	if kc.handlers == nil {
 		kc.handlers = map[string]IKafkaHandler{
 			"default": DefaultKafkaHandler{},
