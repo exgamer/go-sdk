@@ -14,10 +14,8 @@ import (
 
 func NewConsumer(appInfo *config.AppInfo, handlers map[string]IKafkaHandler, configMap *kafka.ConfigMap) *KafkaConsumer {
 	return &KafkaConsumer{
-		appInfo: appInfo,
-		//topicList: topics,
-		handlers: handlers,
-		//writer:    writer,
+		appInfo:   appInfo,
+		handlers:  handlers,
 		run:       true,
 		consume:   false,
 		configMap: configMap,
@@ -25,9 +23,8 @@ func NewConsumer(appInfo *config.AppInfo, handlers map[string]IKafkaHandler, con
 }
 
 type KafkaConsumer struct {
-	consumer *kafka.Consumer
-	appInfo  *config.AppInfo
-	//topicList []string
+	consumer  *kafka.Consumer
+	appInfo   *config.AppInfo
 	handlers  map[string]IKafkaHandler
 	run       bool
 	consume   bool
