@@ -113,12 +113,14 @@ func (kc *KafkaConsumer) initConsume() {
 						handler = kc.handlers["default"].(IKafkaHandler)
 					}
 
-					message := "key:" + string(e.Key) + "; value:" + string(e.Value)
-					logger.FormattedInfo(kc.appInfo.ServiceName, "", *e.TopicPartition.Topic, 0, groupId, message)
+					message := "groupId:" + groupId + ";key:" + string(e.Key) + "; value:" + string(e.Value)
+					logger.FormattedInfo(kc.appInfo.ServiceName, "consumer", *e.TopicPartition.Topic, 0, kc.appInfo.RequestId, message)
 					err := handler.Handle(kc.consumer, e)
 
 					if err != nil {
 						log.Println(err)
+						message = message + "; error_text:" + err.Error()
+						logger.FormattedError(kc.appInfo.ServiceName, "consumer", *e.TopicPartition.Topic, 0, kc.appInfo.RequestId, message)
 						sentry.SendError("Kafka Consumer Error: "+err.Error(),
 							map[string]string{
 								"service_name": kc.appInfo.ServiceName,
