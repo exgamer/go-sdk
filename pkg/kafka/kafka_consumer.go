@@ -7,7 +7,6 @@ import (
 	"github.com/exgamer/go-sdk/pkg/config"
 	"github.com/exgamer/go-sdk/pkg/logger"
 	"github.com/exgamer/go-sdk/pkg/sentry"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -118,7 +117,6 @@ func (kc *KafkaConsumer) initConsume() {
 					err := handler.Handle(kc.consumer, e)
 
 					if err != nil {
-						log.Println(err)
 						message = message + "; error_text:" + err.Error()
 						logger.FormattedError(kc.appInfo.ServiceName, "consumer", *e.TopicPartition.Topic, 0, kc.appInfo.RequestId, message)
 						sentry.SendError("Kafka Consumer Error: "+err.Error(),
@@ -134,6 +132,7 @@ func (kc *KafkaConsumer) initConsume() {
 								"timestamp":       e.Timestamp,
 							},
 						)
+						kc.consumer.CommitMessage(e) // кафка не имеет механизма удаления сообщения, поэтому при ошибке просто комитим его
 					}
 				case kafka.Error:
 					// Errors should generally be considered
