@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/exgamer/go-sdk/pkg/config"
 	"github.com/exgamer/go-sdk/pkg/kafka/messenger/structures"
 	"github.com/exgamer/go-sdk/pkg/logger"
@@ -12,7 +11,6 @@ import (
 )
 
 func NewMessageSender(appInfo *config.AppInfo, configMap *kafka.ConfigMap) *MessageSender {
-	spew.Dump(configMap)
 
 	if configMap == nil {
 		configMap = &kafka.ConfigMap{
@@ -36,8 +34,9 @@ func (s *MessageSender) SendSms(phone string, text string) error {
 	producer, _ := kafka.NewProducer(s.configMap)
 
 	smsMessage := structures.SmsMessage{
-		Phone: phone,
-		Text:  text,
+		Phone:       phone,
+		Text:        text,
+		ServiceName: s.appInfo.ServiceName,
 	}
 
 	if !validation.CheckValidPhone(smsMessage.Phone) {

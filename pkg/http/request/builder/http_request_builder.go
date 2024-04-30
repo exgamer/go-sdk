@@ -2,7 +2,9 @@ package builder
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"github.com/exgamer/go-sdk/pkg/config"
+	"github.com/exgamer/go-sdk/pkg/constants"
 	"github.com/exgamer/go-sdk/pkg/http/structures"
 	"github.com/exgamer/go-sdk/pkg/logger"
 	"github.com/motemen/go-loghttp"
@@ -15,36 +17,52 @@ import (
 // NewPostHttpRequestBuilder - Новый построитель rest запросов для POST
 func NewPostHttpRequestBuilder[E interface{}](url string) *HttpRequestBuilder[E] {
 	return &HttpRequestBuilder[E]{
-		url:       url,
-		method:    "POST",
-		timeout:   30 * time.Second,
-		transport: loghttp.Transport{},
+		url:                      url,
+		method:                   "POST",
+		timeout:                  30 * time.Second,
+		transport:                loghttp.Transport{},
+		responseDataPresentation: constants.JSON,
 	}
 }
 
 // NewGetHttpRequestBuilder - Новый построитель rest запросов для GET
 func NewGetHttpRequestBuilder[E interface{}](url string) *HttpRequestBuilder[E] {
 	return &HttpRequestBuilder[E]{
-		url:                 url,
-		method:              "GET",
-		timeout:             30 * time.Second,
-		throwUnmarshalError: false,
-		transport:           loghttp.Transport{},
+		url:                      url,
+		method:                   "GET",
+		timeout:                  30 * time.Second,
+		throwUnmarshalError:      false,
+		transport:                loghttp.Transport{},
+		responseDataPresentation: constants.JSON,
 	}
 }
 
 // HttpRequestBuilder - Построитель rest запросов
 type HttpRequestBuilder[E interface{}] struct {
-	url                 string
-	method              string
-	headers             map[string]string
-	throwUnmarshalError bool
-	body                io.Reader
-	appInfo             *config.AppInfo
-	timeout             time.Duration
-	transport           loghttp.Transport
-	response            *structures.HttpResponse[E]
-	result              E
+	url                      string
+	method                   string
+	headers                  map[string]string
+	throwUnmarshalError      bool
+	body                     io.Reader
+	appInfo                  *config.AppInfo
+	timeout                  time.Duration
+	transport                loghttp.Transport
+	request                  *http.Request
+	response                 *structures.HttpResponse[E]
+	responseDataPresentation string
+	result                   E
+}
+
+func (builder *HttpRequestBuilder[E]) SetResponseDataPresentation(dataPresentation string) *HttpRequestBuilder[E] {
+	builder.responseDataPresentation = dataPresentation
+
+	return builder
+}
+
+func (builder *HttpRequestBuilder[E]) SetHttpRequest(request *http.Request) *HttpRequestBuilder[E] {
+	builder.request = request
+
+	return builder
 }
 
 // SetRequestData - установить Доп данные для запроса (используется для логирования)
@@ -88,13 +106,15 @@ func (builder *HttpRequestBuilder[E]) do() error {
 		Transport: &builder.transport,
 	}
 
-	req, _ := http.NewRequest(builder.method, builder.url, builder.body)
-
-	for n, v := range builder.headers {
-		req.Header.Set(n, v)
+	if builder.request == nil {
+		builder.request, _ = http.NewRequest(builder.method, builder.url, builder.body)
 	}
 
-	response, err := client.Do(req)
+	for n, v := range builder.headers {
+		builder.request.Header.Set(n, v)
+	}
+
+	response, err := client.Do(builder.request)
 	builder.response = &structures.HttpResponse[E]{
 		Url:     builder.url,
 		Method:  builder.method,
@@ -169,10 +189,22 @@ func (builder *HttpRequestBuilder[E]) GetResult() (*structures.HttpResponse[E], 
 		return nil, err
 	}
 
-	unMarshErr := json.Unmarshal(builder.response.Body, &builder.result)
-
-	if unMarshErr != nil && builder.throwUnmarshalError {
-		return nil, unMarshErr
+	switch builder.responseDataPresentation {
+	case constants.JSON:
+		unMarshErr := json.Unmarshal(builder.response.Body, &builder.result)
+		if unMarshErr != nil && builder.throwUnmarshalError {
+			return nil, unMarshErr
+		}
+	case constants.XML:
+		unMarshErr := xml.Unmarshal(builder.response.Body, &builder.result)
+		if unMarshErr != nil && builder.throwUnmarshalError {
+			return nil, unMarshErr
+		}
+	default:
+		unMarshErr := json.Unmarshal(builder.response.Body, &builder.result)
+		if unMarshErr != nil && builder.throwUnmarshalError {
+			return nil, unMarshErr
+		}
 	}
 
 	builder.response.Result = builder.result
